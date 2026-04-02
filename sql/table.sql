@@ -11,7 +11,6 @@ DROP VIEW IF EXISTS v_pit_stop_performance;
 DROP VIEW IF EXISTS v_Driver_Penalized_ranking;
 DROP VIEW IF EXISTS v_team_penalties_ranking;
 
-PRAGMA foreign_keys = ON;
 
 CREATE TABLE teams (
     team_id INTEGER PRIMARY KEY AUTOINCREMENT,
