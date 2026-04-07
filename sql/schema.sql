@@ -1,159 +1,199 @@
-DROP TABLE IF EXISTS penalties;
-DROP TABLE IF EXISTS pit_stops;
-DROP TABLE IF EXISTS results;
-DROP TABLE IF EXISTS drivers;
-DROP TABLE IF EXISTS races;
-DROP TABLE IF EXISTS teams;
-DROP TABLE IF EXISTS circuits;
+/* ================================================================================
+  DATABASE SCHEMA: Formula 1 Analysis (For any season already available on OpenF1)
+  =================================================================================
+*/
 
-DROP VIEW IF EXISTS v_driver_standings;
-DROP VIEW IF EXISTS v_team_standings;
-DROP VIEW IF EXISTS v_pit_stop_performance;
-DROP VIEW IF EXISTS v_Driver_Penalized_ranking;
-DROP VIEW IF EXISTS v_team_penalties_ranking;
+PRAGMA foreign_keys = ON;
 
+-- -----------------------------------------------------
+-- TABLE: teams
+-- -----------------------------------------------------
 CREATE TABLE teams (
-    team_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    nationality TEXT,
-    base_city TEXT
+    team_id INTEGER PRIMARY KEY AUTOINCREMENT, -- Unique team ID (AUTOINCREMENT)
+    name TEXT NOT NULL UNIQUE                  -- Official team name
 );
 
+-- -----------------------------------------------------
+-- TABLE: circuits
+-- -----------------------------------------------------
 CREATE TABLE circuits (
-    circuit_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    location TEXT,
-    country TEXT,
-    length_km REAL
+    circuit_id INTEGER PRIMARY KEY AUTOINCREMENT, -- Unique track ID (AUTOINCREMENT)
+    name TEXT NOT NULL UNIQUE,                    -- Grand Prix location name
+    country TEXT                                  -- Host nation
 );
 
+-- -----------------------------------------------------
+-- TABLE: races
+-- -----------------------------------------------------
 CREATE TABLE races (
-    session_key INTEGER PRIMARY KEY,
-    year INTEGER NOT NULL,
-    round INTEGER, 
-    circuit_id INTEGER,
-    name TEXT,
-    date DATE,
-    FOREIGN KEY (circuit_id) REFERENCES circuits(circuit_id)
+    session_key INTEGER PRIMARY KEY, -- Unique session ID (API)
+    year INTEGER NOT NULL,           -- Racing season 
+    circuit_id INTEGER,              -- Links to the circuits table
+    name TEXT,                       -- Display name of the event
+    date DATETIME,                   -- Date of the race 
+    FOREIGN KEY (circuit_id) REFERENCES circuits(circuit_id) -- Link to others tables 
 );
 
+-- -----------------------------------------------------
+-- TABLE: drivers
+-- -----------------------------------------------------
 CREATE TABLE drivers (
-    driver_id INTEGER PRIMARY KEY, 
-    first_name TEXT,
-    last_name TEXT,
-    full_name TEXT,
-    code TEXT UNIQUE,
-    nationality TEXT,
-    team_id INTEGER, 
-    FOREIGN KEY (team_id) REFERENCES teams(team_id)
+    driver_number INTEGER PRIMARY KEY, -- Official FIA car number (API)
+    full_name TEXT NOT NULL,           -- Driver's full name
+    team_id INTEGER,                   -- Links to the constructor (teams table)
+    team_colour TEXT,                  -- Hexadecimal code for UI/Charts
+    FOREIGN KEY (team_id) REFERENCES teams(team_id) -- Link to others tables 
 );
 
+-- -----------------------------------------------------
+-- TABLE: results
+-- -----------------------------------------------------
 CREATE TABLE results (
-    session_key INTEGER,
-    driver_id INTEGER,
-    team_id INTEGER, 
-    grid_position INTEGER,
-    final_position INTEGER,
-    points REAL,
-    status TEXT,
-    PRIMARY KEY (session_key, driver_id),
+    session_key INTEGER,                -- Reference to the specific race (API)
+    driver_number INTEGER,              -- Reference to the driver
+    position INTEGER,                   -- Final classification
+    points REAL DEFAULT 0,              -- Computed F1 points 
+    PRIMARY KEY (session_key, driver_number), -- One result per race
     FOREIGN KEY (session_key) REFERENCES races(session_key),
-    FOREIGN KEY (driver_id) REFERENCES drivers(driver_id),
-    FOREIGN KEY (team_id) REFERENCES teams(team_id)
+    FOREIGN KEY (driver_number) REFERENCES drivers(driver_number) -- Link to others tables 
 );
 
+-- -----------------------------------------------------
+-- TABLE: pit_stops
+-- -----------------------------------------------------
 CREATE TABLE pit_stops (
-    session_key INTEGER,
-    driver_id INTEGER,
-    lap INTEGER,
-    duration_seconds REAL,
-    FOREIGN KEY (session_key, driver_id) REFERENCES results(session_key, driver_id)
+    session_key INTEGER,     -- Race event reference
+    driver_number INTEGER,   -- Driver involved in the pit stop
+    lap_number INTEGER,      -- Lap when the stop occurred
+    duration REAL,           -- Time spent in the pit lane in seconds
+    FOREIGN KEY (session_key, driver_number) REFERENCES results(session_key, driver_number) -- Link to others tables 
 );
 
+-- -----------------------------------------------------
+-- TABLE: penalties
+-- -----------------------------------------------------
 CREATE TABLE penalties (
-    penalty_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    session_key INTEGER, 
-    driver_id INTEGER,
-    infraction TEXT,
-    seconds_added INTEGER,
-    is_served BOOLEAN,
-    FOREIGN KEY (session_key, driver_id) REFERENCES results(session_key, driver_id)
+    penalty_id INTEGER PRIMARY KEY AUTOINCREMENT, -- Unique log ID (AUTOINCREMENT)
+    session_key INTEGER,                          -- Race event reference
+    driver_number INTEGER,                        -- Infringing driver
+    lap_number INTEGER,                           -- Lap of the incident
+    infraction TEXT,                              -- Official description of the foul
+    FOREIGN KEY (session_key, driver_number) REFERENCES results(session_key, driver_number) -- Link to others tables 
 );
 
+-- -----------------------------------------------------
+-- INDEXES for Performance
+-- -----------------------------------------------------
+-- Accelerates searches by driver name
+CREATE INDEX idx_driver_name ON drivers(full_name); 
+-- Accelerates performance analysis by constructor
+CREATE INDEX idx_team_name ON teams(name); 
 
--- 1. Classement des Pilotes
+-- ================================================================================
+-- SQL VIEWS
+-- ================================================================================
+
+-- -----------------------------------------------------
+-- VIEW: v_driver_standings (Corrigée pour séparer les années)
+-- -----------------------------------------------------
 CREATE VIEW v_driver_standings AS
 SELECT 
-    d.full_name AS Pilot,
-    t.name AS Team,
-    SUM(res.points) AS Total_Points,
-    COUNT(CASE WHEN res.final_position <= 3 THEN 1 END) AS Podiums
-FROM drivers d
-JOIN results res ON d.driver_id = res.driver_id
-JOIN teams t ON res.team_id = t.team_id
-GROUP BY d.driver_id
-ORDER BY Total_Points DESC;
+    ra.year AS Season,
+    d.full_name AS Driver,
+    t.name AS Constructor,
+    SUM(res.points) AS Total_Points
+FROM results res
+JOIN races ra ON res.session_key = ra.session_key -- Lien indispensable pour l'année
+JOIN drivers d ON res.driver_number = d.driver_number
+JOIN teams t ON d.team_id = t.team_id
+GROUP BY ra.year, d.driver_number -- On groupe par année ET par pilote
+ORDER BY ra.year DESC, Total_Points DESC;
 
--- 2. Classement des Écuries
+-- -----------------------------------------------------
+-- VIEW: v_team_standings (Corrigée pour séparer les années)
+-- -----------------------------------------------------
+DROP VIEW IF EXISTS v_team_standings;
 CREATE VIEW v_team_standings AS
 SELECT 
-    t.name AS Team,
-    SUM(res.points) AS Total_Points,
-    t.nationality AS Origin
-FROM teams t
-JOIN results res ON t.team_id = res.team_id
-GROUP BY t.team_id
-ORDER BY Total_Points DESC;
+    ra.year AS Season,
+    CASE 
+        WHEN d.full_name = 'Lewis HAMILTON' AND ra.year = 2024 THEN 'Mercedes'
+        WHEN d.full_name = 'Carlos SAINZ' AND ra.year = 2024 THEN 'Ferrari'
+        WHEN d.full_name = 'Carlos SAINZ' AND ra.year = 2025 THEN 'Williams'
+        WHEN t.name = 'RB' OR t.name LIKE '%Racing Bulls%' THEN 'Racing Bulls'
+        WHEN t.name LIKE '%Kick Sauber%' THEN 'Sauber'
+        ELSE t.name 
+    END AS Constructor,
+    SUM(res.points) AS Total_Points
+FROM results res
+JOIN races ra ON res.session_key = ra.session_key
+JOIN drivers d ON res.driver_number = d.driver_number
+JOIN teams t ON d.team_id = t.team_id
+GROUP BY Season, Constructor
+ORDER BY Season DESC, Total_Points DESC;
 
--- 3. Performance des Arrêts aux Stands (Nettoyée des Drapeaux Rouges > 60s)
-CREATE VIEW v_pit_stop_performance AS
+-- -----------------------------------------------------
+-- VIEW: v_race_results_detailed
+-- Role: Displays the full classification for every Grand Prix.
+-- Links the race, circuit, and country info for a complete history.
+-- -----------------------------------------------------
+CREATE VIEW v_race_results_detailed AS
 SELECT 
-    t.name AS Team,
-    ROUND(AVG(p.duration_seconds), 3) AS Avg_Pit_Time,
-    MIN(p.duration_seconds) AS Best_Stop,
-    COUNT(*) AS Total_Stops_Executed
-FROM pit_stops p
-JOIN results res ON p.session_key = res.session_key AND p.driver_id = res.driver_id
-JOIN teams t ON res.team_id = t.team_id
-WHERE p.duration_seconds < 60
-GROUP BY t.team_id
-ORDER BY Avg_Pit_Time ASC; 
+    r.year AS Season,
+    r.name AS Grand_Prix,
+    c.country AS Country,
+    d.full_name AS Driver,
+    res.position AS Rank,
+    res.points AS Points_Earned
+FROM results res
+JOIN races r ON res.session_key = r.session_key
+JOIN circuits c ON r.circuit_id = c.circuit_id
+JOIN drivers d ON res.driver_number = d.driver_number
+ORDER BY r.date DESC, res.position ASC;
 
--- 4. Classement des Pilotes les plus pénalisés
-CREATE VIEW v_Driver_Penalized_ranking AS
+-- -----------------------------------------------------
+-- VIEW: v_pit_performance
+-- Role: Analyzes the speed of the pit crews by team.
+-- Calculates average time (excluding outliers over 60s like red flags).
+-- -----------------------------------------------------
+CREATE VIEW v_pit_performance AS
 SELECT 
+    ra.year AS Season,
+    -- On applique le même nettoyage pour fusionner RB/Racing Bulls et Sauber
+    CASE 
+        WHEN d.full_name = 'Lewis HAMILTON' AND ra.year = 2024 THEN 'Mercedes'
+        WHEN d.full_name = 'Carlos SAINZ' AND ra.year = 2024 THEN 'Ferrari'
+        WHEN d.full_name = 'Carlos SAINZ' AND ra.year = 2025 THEN 'Williams'
+        WHEN t.name = 'RB' OR t.name LIKE '%Racing Bulls%' THEN 'Racing Bulls'
+        WHEN t.name LIKE '%Sauber%' THEN 'Sauber'
+        ELSE t.name 
+    END AS Team,
+    ROUND(AVG(ps.duration), 3) AS Avg_Pit_Time,
+    COUNT(*) AS Total_Pit_Stops
+FROM pit_stops ps
+JOIN races ra ON ps.session_key = ra.session_key
+JOIN drivers d ON ps.driver_number = d.driver_number
+JOIN teams t ON d.team_id = t.team_id
+WHERE ps.duration < 60 
+-- IMPORTANT : On groupe par l'alias "Team" pour fusionner les lignes
+GROUP BY Season, Team
+ORDER BY Season DESC, Avg_Pit_Time ASC;
+
+
+-- -----------------------------------------------------
+-- VIEW: v_bad_boys_ranking
+-- Role: Ranks drivers by the number of penalties received.
+-- Helps identify the most aggressive or error-prone drivers.
+-- -----------------------------------------------------
+CREATE VIEW v_bad_boys_ranking AS
+SELECT 
+    ra.year AS Season,
     d.full_name AS Driver,
     t.name AS Team,
-    COUNT(pen.penalty_id) AS Total_Infractions
-FROM drivers d
+    COUNT(p.penalty_id) AS Penalty_Count
+FROM penalties p
+JOIN races ra ON p.session_key = ra.session_key -- Lien pour l'année
+JOIN drivers d ON p.driver_number = d.driver_number
 JOIN teams t ON d.team_id = t.team_id
-JOIN penalties pen ON d.driver_id = pen.driver_id
-GROUP BY d.driver_id
-ORDER BY Total_Infractions DESC;
-
--- 5. Classement des Écuries les plus pénalisées
-CREATE VIEW v_team_penalties_ranking AS
-SELECT 
-    t.name AS Team,
-    COUNT(pen.penalty_id) AS Total_Infractions,
-    GROUP_CONCAT(DISTINCT pen.infraction) AS Common_Infractions 
-FROM teams t
-JOIN results res ON t.team_id = res.team_id
-JOIN penalties pen ON res.session_key = pen.session_key AND res.driver_id = pen.driver_id
-GROUP BY t.team_id
-ORDER BY Total_Infractions DESC;
-
-UPDATE results
-SET points = CASE 
-    WHEN final_position = 1 THEN 25
-    WHEN final_position = 2 THEN 18
-    WHEN final_position = 3 THEN 15
-    WHEN final_position = 4 THEN 12
-    WHEN final_position = 5 THEN 10
-    WHEN final_position = 6 THEN 8
-    WHEN final_position = 7 THEN 6
-    WHEN final_position = 8 THEN 4
-    WHEN final_position = 9 THEN 2
-    WHEN final_position = 10 THEN 1
-    ELSE 0
-END;
+GROUP BY ra.year, d.driver_number
+ORDER BY ra.year DESC, Penalty_Count DESC;
