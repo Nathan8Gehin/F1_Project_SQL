@@ -96,7 +96,7 @@ CREATE INDEX idx_team_name ON teams(name);
 -- -----------------------------------------------------
 -- VIEW: v_driver_standings (Corrigée pour séparer les années)
 -- -----------------------------------------------------
-CREATE VIEW v_driver_standings AS
+CREATE VIEW Driver_standings AS
 SELECT 
     ra.year AS Season,
     d.full_name AS Driver,
@@ -112,7 +112,7 @@ ORDER BY ra.year DESC, Total_Points DESC;
 -- -----------------------------------------------------
 -- VIEW: v_team_standings (Corrigée pour séparer les années)
 -- -----------------------------------------------------
-DROP VIEW IF EXISTS v_team_standings;
+DROP VIEW IF EXISTS Team_standings;
 CREATE VIEW v_team_standings AS
 SELECT 
     ra.year AS Season,
@@ -137,7 +137,7 @@ ORDER BY Season DESC, Total_Points DESC;
 -- Role: Displays the full classification for every Grand Prix.
 -- Links the race, circuit, and country info for a complete history.
 -- -----------------------------------------------------
-CREATE VIEW v_race_results_detailed AS
+CREATE VIEW race_results AS
 SELECT 
     r.year AS Season,
     r.name AS Grand_Prix,
@@ -156,7 +156,7 @@ ORDER BY r.date DESC, res.position ASC;
 -- Role: Analyzes the speed of the pit crews by team.
 -- Calculates average time (excluding outliers over 60s like red flags).
 -- -----------------------------------------------------
-CREATE VIEW v_pit_performance AS
+CREATE VIEW pit_performance AS
 SELECT 
     ra.year AS Season,
     -- On applique le même nettoyage pour fusionner RB/Racing Bulls et Sauber
@@ -185,7 +185,7 @@ ORDER BY Season DESC, Avg_Pit_Time ASC;
 -- Role: Ranks drivers by the number of penalties received.
 -- Helps identify the most aggressive or error-prone drivers.
 -- -----------------------------------------------------
-CREATE VIEW v_bad_boys_ranking AS
+CREATE VIEW bad_boys_ranking AS
 SELECT 
     ra.year AS Season,
     d.full_name AS Driver,
