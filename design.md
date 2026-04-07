@@ -33,7 +33,7 @@ erDiagram
     
     TEAMS ||--o{ DRIVERS : "emploie"
     
-    DRIVERS ||--o{ RESULTS : "génère"
+    DRIVERS ||--o{ RESULTS : "Performe"
     DRIVERS ||--o{ PIT_STOPS : "effectue"
     DRIVERS ||--o{ PENALTIES : "reçoit"
 
