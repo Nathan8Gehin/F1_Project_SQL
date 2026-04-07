@@ -1,7 +1,7 @@
-# F1 Data Analytics Pipeline (2024-2025)
+# F1 Data Analytics Pipeline
 
 ## 1. Sujet et Contexte
-Ce projet consiste en la création d'une base de données relationnelle automatisée dédiée à l'analyse des performances en Formule 1 pour les saisons **2024 et 2025**.
+Ce projet consiste en la création d'une base de données relationnelle automatisée dédiée à l'analyse des performances en Formule 1 pour n'importe quel saison.
 
 **Le problème résolu :**
 Les données brutes de sport automobile sont souvent dispersées, volumineuses et difficiles à corréler (ex: lier une pénalité textuelle à un numéro de voiture ou comparer des temps de stands sur deux saisons). Cette base de données centralise ces informations pour permettre des analyses croisées entre les résultats de course, la rapidité des arrêts aux stands et la discipline des pilotes.
@@ -9,18 +9,14 @@ Les données brutes de sport automobile sont souvent dispersées, volumineuses e
 ---
 
 ## 2. Utilisateurs Cibles
-Cette base de données est conçue pour :
-* **Analystes de données sportives** : Pour identifier des tendances de performance sur le long terme.
-* **Ingénieurs de stratégie** : Pour comparer les temps de pit-stop moyens entre les écuries.
-* **Journalistes spécialisés** : Pour extraire rapidement des statistiques fiables (ex: classement des "Bad Boys" les plus pénalisés).
-* **Développeurs d'applications F1** : Comme backend pour des tableaux de bord (Dashboards) de visualisation.
+Cette base de données est conçue pour les personnes qui s'interesse à la formule 1 et qui souhaite suivre la saison de façon simplifié avec beaucoup d'information.
 
 ---
 
 ## 3. Sources de Données
 Le projet utilise exclusivement des données réelles et officielles :
 * **OpenF1 API** : Une API haute fidélité fournissant des données en temps réel sur les sessions, les pilotes, les temps au tour et les décisions de la FIA.
-* **Extraction Python** : Un script sur mesure a été développé pour extraire, nettoyer et transformer les données JSON de l'API en formats exploitables (CSV/SQL).
+* **Extraction Python** : Un script sur mesure a été développé pour extraire, nettoyer et transformer les données JSON de l'API en format CSV.
 
 ---
 
