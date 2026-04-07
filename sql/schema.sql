@@ -81,21 +81,14 @@ CREATE TABLE penalties (
     FOREIGN KEY (session_key, driver_number) REFERENCES results(session_key, driver_number) -- Link to others tables 
 );
 
--- -----------------------------------------------------
--- INDEXES for Performance
--- -----------------------------------------------------
--- Accelerates searches by driver name
-CREATE INDEX idx_driver_name ON drivers(full_name); 
--- Accelerates performance analysis by constructor
-CREATE INDEX idx_team_name ON teams(name); 
-
 -- ================================================================================
--- SQL VIEWS
+-- VIEWS
 -- ================================================================================
 
--- -----------------------------------------------------
--- VIEW: v_driver_standings (Corrigée pour séparer les années)
--- -----------------------------------------------------
+-- -------------------------------------------------------------
+-- Driver_standings 
+-- It is only about the Grand prix standing, not the sprint race
+-- -------------------------------------------------------------
 CREATE VIEW Driver_standings AS
 SELECT 
     ra.year AS Season,
@@ -109,9 +102,10 @@ JOIN teams t ON d.team_id = t.team_id
 GROUP BY ra.year, d.driver_number -- On groupe par année ET par pilote
 ORDER BY ra.year DESC, Total_Points DESC;
 
--- -----------------------------------------------------
--- VIEW: v_team_standings (Corrigée pour séparer les années)
--- -----------------------------------------------------
+-- -----------------------------------------------------------
+-- Team_standings
+-- It is only for Grand Pirx, it doesn't take the sprint race
+-- -----------------------------------------------------------
 DROP VIEW IF EXISTS Team_standings;
 CREATE VIEW v_team_standings AS
 SELECT 
@@ -133,9 +127,8 @@ GROUP BY Season, Constructor
 ORDER BY Season DESC, Total_Points DESC;
 
 -- -----------------------------------------------------
--- VIEW: v_race_results_detailed
--- Role: Displays the full classification for every Grand Prix.
--- Links the race, circuit, and country info for a complete history.
+-- Race_results
+-- Displays the full classification for every Grand Prix.
 -- -----------------------------------------------------
 CREATE VIEW race_results AS
 SELECT 
@@ -152,14 +145,12 @@ JOIN drivers d ON res.driver_number = d.driver_number
 ORDER BY r.date DESC, res.position ASC;
 
 -- -----------------------------------------------------
--- VIEW: v_pit_performance
--- Role: Analyzes the speed of the pit crews by team.
--- Calculates average time (excluding outliers over 60s like red flags).
+-- Pit_performance
+-- Calculates average time of a team's pit.
 -- -----------------------------------------------------
 CREATE VIEW pit_performance AS
 SELECT 
     ra.year AS Season,
-    -- On applique le même nettoyage pour fusionner RB/Racing Bulls et Sauber
     CASE 
         WHEN d.full_name = 'Lewis HAMILTON' AND ra.year = 2024 THEN 'Mercedes'
         WHEN d.full_name = 'Carlos SAINZ' AND ra.year = 2024 THEN 'Ferrari'
@@ -175,15 +166,13 @@ JOIN races ra ON ps.session_key = ra.session_key
 JOIN drivers d ON ps.driver_number = d.driver_number
 JOIN teams t ON d.team_id = t.team_id
 WHERE ps.duration < 60 
--- IMPORTANT : On groupe par l'alias "Team" pour fusionner les lignes
 GROUP BY Season, Team
 ORDER BY Season DESC, Avg_Pit_Time ASC;
 
 
 -- -----------------------------------------------------
--- VIEW: v_bad_boys_ranking
--- Role: Ranks drivers by the number of penalties received.
--- Helps identify the most aggressive or error-prone drivers.
+-- Bad_boys_ranking
+-- Ranks drivers by the number of penalties received.
 -- -----------------------------------------------------
 CREATE VIEW bad_boys_ranking AS
 SELECT 
