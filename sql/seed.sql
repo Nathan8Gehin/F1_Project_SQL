@@ -82,7 +82,6 @@ WHERE EXISTS (
 INSERT INTO penalties (session_key, driver_number, lap_number, infraction)
 SELECT 
     tr.session_key,
-    -- On extrait le numéro qui se trouve juste après "CAR "
     CAST(TRIM(SUBSTR(tr.infraction, INSTR(tr.infraction, 'CAR ') + 4, 3)) AS INTEGER),
     tr.lap_number,
     tr.infraction
