@@ -2,6 +2,7 @@ import requests
 import csv
 import os
 import time
+import re
 
 BASE_URL = "https://api.openf1.org/v1"
 
@@ -26,7 +27,7 @@ def get_results_season(year):
         print("There is yet no data for that year")
         return
 
-    with open(f"{path}/races.csv", "w", newline="", encoding="utf-8") as f:
+    with open(f"{path}/temp_races_{year}.csv", "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(["session_key", "gp_name", "country", "date"])
         for s in sessions:
@@ -35,15 +36,15 @@ def get_results_season(year):
     # DRIVERS
     first_session = sessions[0]['session_key']
     drivers_list = get_data("drivers", {"session_key": first_session})
-    with open(f"{path}/drivers.csv", "w", newline="", encoding="utf-8") as f:
+    with open(f"{path}/temp_drivers_{year}.csv", "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(["driver_number", "full_name", "team_name", "team_colour"])
         for d in drivers_list:
             writer.writerow([d['driver_number'], d.get('full_name'), d.get('team_name'), d.get('team_colour')])
 
-    with open(f"{path}/results.csv", "w", newline="", encoding="utf-8") as f_res, \
-        open(f"{path}/pit_stops.csv", "w", newline="", encoding="utf-8") as f_pit, \
-        open(f"{path}/penalties.csv", "w", newline="", encoding="utf-8") as f_pen:
+    with open(f"{path}/temp_results_{year}.csv", "w", newline="", encoding="utf-8") as f_res, \
+        open(f"{path}/temp_pit_stops_{year}.csv", "w", newline="", encoding="utf-8") as f_pit, \
+        open(f"{path}/temp_penalties_{year}.csv", "w", newline="", encoding="utf-8") as f_pen:
 
         res_w = csv.writer(f_res)
         pit_w = csv.writer(f_pit)
@@ -81,14 +82,30 @@ def get_results_season(year):
 
             # PENALTIES
             msgs = get_data("race_control", {"session_key": sk})
+            pen_count = 0
             for m in msgs:
                 txt = m.get('message', '').upper()
-                if "PENALTY" in txt:
-                    pen_w.writerow([sk, m.get('driver_number'), m.get('lap_number'), m.get('message')])
 
-            time.sleep(4.0)
+                if "PENALTY" in txt or "INCIDENT" in txt or "INVESTIGATION" in txt:
+                    driver_no = m.get('driver_number')
+
+                    if driver_no is None or str(driver_no) == "" or str(driver_no) == "None":
+                        match = re.search(r"CAR\s*[:\s]\s*(\d+)", txt)
+                        if not match:
+                            match = re.search(r"CAR\s+(\d+)", txt)
+
+                        if match:
+                            driver_no = match.group(1)
+
+                    if driver_no:
+                        pen_w.writerow([sk, driver_no, m.get('lap_number'), m.get('message')])
+                        pen_count += 1
+
+            time.sleep(4)
+
+            print(f"Penalties : {pen_count} recorded")
 
     print(f"The {year} season has well been exported in {path}")
 
 if __name__ == "__main__":
-    get_results_season(2024)
+    get_results_season(2025)
