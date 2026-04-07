@@ -87,10 +87,10 @@ erDiagram
 ```
 ## Explication des choix de conception 
 
-Nous avons choisis ces entités car elle nous parraissent être les plus évidente quand il s'agit d'analyser les résultats en F1, elle sont aussi parmi les tables les plus "simple" a scrapper de part la facilité d'accès à de nombreuses API open source.
-Cette API a égalment permi de mettre en avant les deux clé primaire qui ne sont pas autoincrémenté par sql, le `driver_number` et la `session key` qui sont les pivots principaux de cette analyse et permettent notamment de fluidifier les données et de garantir une bonne coordination dans les relations entre les entités
+Nous avons choisis ces entités car elle nous parraissent être les plus évidente quand il s'agit d'analyser les résultats en F1, elle sont aussi parmi les tables les plus "simple" à scrapper grâce à l'accès à de nombreuses API open source.
+Cette dernière nous a permi de mettre en avant les deux clé primaire qui ne sont pas autoincrémenté par sql, le `driver_number` et la `session key` qui sont les pivots principaux de cette analyse et permettent notamment de fluidifier les données, et de garantir une bonne coordination dans les relations entre les entités.
 
-Enfin nous avons choisis 3 type de données ;
+Nous avons donc choisis 3 type de données ;
 
 * **Les INTEGER**, pour les clés, ce qui permet une optimisation des temps de jointure.
 * **Les FLOAT**, Pour les temps
