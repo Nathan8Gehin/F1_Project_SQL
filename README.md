@@ -1,4 +1,4 @@
-# F1 Data Analytics Pipeline
+# F1 Data Analytics 
 
 ## 1. Sujet et Contexte
 Ce projet consiste en la création d'une base de données relationnelle automatisée dédiée à l'analyse des performances en Formule 1 pour n'importe quel saison.
