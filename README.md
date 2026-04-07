@@ -64,7 +64,7 @@ Le projet est organisé de manière modulaire pour séparer l'extraction, le sto
 ```
 ---
 
-## 5. Installation Rapide
+## 4. Installation Rapide
 1. Installer les dépendances : `pip install -r requirements.txt`.
 2. Lancer l'extraction : `python main.py` en choisissant l'année que vous voulez.
 3. Initialiser la base : Exécuter `schema.sql` dans votre gestionnaire SQLite.
