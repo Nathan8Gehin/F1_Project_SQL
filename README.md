@@ -23,20 +23,48 @@ Le projet utilise exclusivement des données réelles et officielles :
 ## 4. Construction du Projet
 Le projet est bâti sur une architecture de pipeline de données classique :
 
-### Architecture Technique
-1. **Extraction (Python)** : Utilisation de la bibliothèque `requests` pour interroger l'API. Gestion du nettoyage des données (notamment l'extraction des numéros de pilotes dans les rapports de pénalités via Regex).
-2. **Stockage (SQLite)** : Choix d'un moteur SQL léger et performant pour gérer les relations entre les circuits, les courses, les pilotes et les écuries.
-3. **Transformation (SQL Views)** : Implémentation d'une couche de "Business Logic" via des Vues SQL pour corriger dynamiquement les transferts de pilotes (ex: Hamilton chez Mercedes en 2024 et Ferrari en 2025) sans altérer les données brutes.
+Voici le bloc complet pour ton fichier README.md. J'ai mis l'accent sur l'arborescence des dossiers et le rôle de chaque fichier SQL (Schema, Seed, Query, Analysis) comme demandé par ton professeur.
 
-### Structure des Dossiers
-* `/data` : Contient les exports CSV par saison.
-* `/scripts` : Scripts Python d'automatisation de l'extraction.
-* `schema.sql` : Script de création des tables, des contraintes d'intégrité et des vues analytiques.
-* `DESIGN.md` : Documentation technique détaillée de l'architecture.
+Markdown
+# F1 Data Analytics Pipeline (Multi-Saisons)
+
+## 1. Sujet et Contexte
+Ce projet est un pipeline de données automatisé (ETL) conçu pour extraire, structurer et analyser les performances de la Formule 1. Le système est **dynamique** : il permet de choisir n'importe quelle saison via le script d'extraction pour générer des analyses comparatives fiables.
+
+**Le problème résolu :**
+La donnée brute de l'API OpenF1 est fragmentée. Ce projet automatise la centralisation de ces flux pour permettre des analyses croisées entre les résultats de course, la rapidité des arrêts aux stands et la discipline des pilotes, peu importe l'année choisie.
 
 ---
 
+## 2. Utilisateurs Cibles
+* **Analystes de données** : Pour comparer les évolutions de performances entre différentes ères.
+* **Ingénieurs de stratégie** : Pour étudier les temps de stands moyens par écurie.
+* **Journalistes et Fans** : Pour générer des classements historiques (ex: "Bad Boys" de la saison 2024 vs 2025).
+
+---
+
+## 3. Architecture du Projet et Liens
+
+Le projet est organisé de manière modulaire pour séparer l'extraction, le stockage et l'analyse :
+
+```text
+.
+├── data/                   # Données brutes et nettoyées (CSV)
+│   ├── 2024/               # Fichiers de la saison 2024
+│   └── 2025/               # Fichiers de la saison 2025
+├── scripts/                
+│   └── extraction.py       # Script de scrapping Python (API OpenF1 -> CSV)
+├── sql/                    
+│   ├── schema.sql          # Structure des tables et des views
+│   ├── seed.sql            # Scripts d'importation des données CSV
+│   ├── queries.sql         # Requêtes de manipulation de base
+│   └── analysis.sql        # Vues analytiques et statistiques avancées
+├── DESIGN.md               # Documentation de conception (ER)
+└── README.md               # Présentation du projet
+```
+---
+
 ## 5. Installation Rapide
-1. Installer les dépendances : `pip install -r requirements.txt`
-2. Lancer l'extraction : `python main.py`
-3. Initialiser la base : Exécuter `schema.sql` dans votre gestionnaire SQLite (ex: DB Browser for SQLite).
+1. Installer les dépendances : `pip install -r requirements.txt`.
+2. Lancer l'extraction : `python main.py` en choisissant l'année que vous voulez.
+3. Initialiser la base : Exécuter `schema.sql` dans votre gestionnaire SQLite.
