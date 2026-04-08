@@ -39,8 +39,8 @@ GROUP BY r.session_key, r.name, r.year
 ORDER BY Nb_Penalties DESC
 LIMIT 5;
 
--- ANALYSE 4 : TOP 5 des meilleurs arrêts aux stands (Pit Stops) par pilote
--- Objectif : Analyser la performance des mécaniciens
+-- ANALYSE 4: TOP 5 des meilleurs pit stops par pilote
+-- Objectif : identifier les arrêts les plus rapides en excluant les données aberrantes
 SELECT 
     d.full_name AS Driver,
     t.name AS Team,
@@ -48,8 +48,8 @@ SELECT
 FROM pit_stops p
 JOIN drivers d ON p.driver_number = d.driver_number
 JOIN teams t ON d.team_id = t.team_id
-WHERE p.duration < 60 -- On exclut les arrêts trop longs liés à des problèmes techniques
+WHERE p.duration < 60  -- Exclusion des arrêts trop longs (problèmes techniques)
+  AND p.duration > 5   -- Exclusion des arrêts trop courts (erreurs de l'API)
 GROUP BY d.driver_number, d.full_name, t.name
 ORDER BY Best_Pit_Stop ASC
 LIMIT 5;
-
