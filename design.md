@@ -12,7 +12,7 @@ Pour notre projet nous avons choisis de concevoir une base de donnée sur les sa
     * **Relation** : Chaque pénalité est rattachée à un pilote et à une session spécifique.
 * **`RACES`** : Définit chaques course grâce à la `session_key` (identifiant unique de l'API openF1). Elle inclut l'année (`year`) pour séparer les saisons 2024 et 2025.
     * **Relation** : Connectée au circuit afin de savoir où s'est déroulé l'événement grâce au `circuit_id`.
-* * **`TEAMS`** : Liste les constructeurs avec leurs noms et couleurs officielles.
+* **`TEAMS`** : Liste les constructeurs avec leurs noms et couleurs officielles.
     * **Relation** : Emploie des pilotes qui concours aux "races"
 * **`DRIVERS`** : Identifie les pilotes. Nous utilisons le `driver_number` comme clé primaire grâce à une autoincrémentation.
     * **Relation** : Est rélié aux teams grâce à leurs `id` et à leurs couleurs officielles
