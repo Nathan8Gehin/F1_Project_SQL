@@ -53,7 +53,7 @@ Le projet est organisé de manière modulaire pour séparer l'extraction, le sto
 │   ├── 2024/               # Fichiers de la saison 2024
 │   └── 2025/               # Fichiers de la saison 2025
 ├── scripts/                
-│   └── extraction.py       # Script de scrapping Python (API OpenF1 -> CSV)
+│   └── data.py.py       # Script de scrapping Python (API OpenF1 -> CSV)
 ├── sql/                    
 │   ├── schema.sql          # Structure des tables et des views
 │   ├── seed.sql            # Scripts d'importation des données CSV
