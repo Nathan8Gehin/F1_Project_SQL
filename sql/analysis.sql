@@ -29,8 +29,19 @@ ORDER BY Total_Penalties DESC
 LIMIT 5;
 
 
--- Analyse 3: TOP 5 des meilleurs pit stops par pilote (meilleur temps uniquement)
+-- ANALYSE 3: Top 5 courses avec le plus de  pénalisés
+-- Objectif : identifier les courses à risque
 
+SELECT r.session_key, COUNT(*) AS nb_penalties
+FROM temp_penalties_2024 p
+JOIN temp_races_2024 r
+    ON p.session_key = r.session_key
+GROUP BY r.session_key
+ORDER BY nb_penalties DESC
+LIMIT 5;
+
+
+-- Analyse 4: TOP 5 des meilleurs pit stops par pilote (meilleur temps uniquement)
 
 SELECT 
     d.full_name AS Driver,
